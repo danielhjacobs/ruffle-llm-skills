@@ -44,7 +44,7 @@ def is_target_checkout() -> bool:
     )
 
 
-def finish_bootstrap() -> tuple[bool, str | None]:
+def finish_bootstrap():
     """Remove bootstrap files, tolerating platforms that lock running scripts."""
     try:
         INIT_FILE.unlink(missing_ok=True)
@@ -119,10 +119,19 @@ def main() -> int:
 
     subprocess.run(["git", "--version"], check=True)
 
-    # Keep the temporary checkout and backup outside the working tree.
+    # Fail before cloning or moving anything if the destination itself is
+    # read-only. This also avoids trying to roll back a partially moved tree.
+    with tempfile.NamedTemporaryFile(
+        prefix=".ruffle-write-test-",
+        dir=str(ROOT),
+        delete=True,
+    ):
+        pass
+
+    # Use the OS temporary directory: ROOT.parent may be read-only, and
+    # shutil.move supports cross-filesystem moves when installing the checkout.
     with tempfile.TemporaryDirectory(
         prefix="ruffle-llm-bootstrap-",
-        dir=str(ROOT.parent),
     ) as temporary_directory:
         temporary = Path(temporary_directory)
         checkout = temporary / "checkout"
@@ -150,7 +159,6 @@ def main() -> int:
 
         # Preserve all local bootstrap files while moving the rest of the
         # old working tree aside. This includes the old .git metadata.
-        backed_up = False
         installation_started = False
         install_names = upstream_names - PRESERVED_NAMES
 
@@ -160,8 +168,6 @@ def main() -> int:
                     continue
 
                 shutil.move(str(entry), str(backup / entry.name))
-
-            backed_up = True
 
             # Install all upstream files, including hidden files and .git.
             # The local AGENTS.md and .agents/ are deliberately retained.
