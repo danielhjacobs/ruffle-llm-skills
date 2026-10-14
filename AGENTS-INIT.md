@@ -13,7 +13,7 @@ Initialize this directory as a checkout of the official Ruffle repository while 
 
 4. The script preserves the existing root `AGENTS.md` and `.agents/` directory. It replaces the existing Git metadata and other working-tree contents with the upstream Ruffle checkout. Do not run it in a directory containing data that must be preserved outside those exceptions.
 
-5. If initialization fails, read the reported error and stop. Do not manually delete `AGENTS-INIT.md`, attempt a second cloning method, or proceed as though initialization succeeded.
+5. If initialization fails, read the reported error and stop the current attempt. Do not manually delete `AGENTS-INIT.md`, use an alternate cloning method, or proceed as though initialization succeeded. If Git failed during the initial clone because of DNS, network, proxy, or access restrictions, the existing working tree has not been replaced. After the underlying connectivity problem is resolved, you may rerun this same initializer; do not repeatedly retry while the same failure persists. For failures after the clone completes, follow the specific rollback or recovery message printed by the script.
 
 6. On success, the script removes `AGENTS-INIT.md` and itself. If the script reports that either file could not be removed, follow its cleanup instructions before proceeding.
 
