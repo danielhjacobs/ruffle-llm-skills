@@ -139,10 +139,20 @@ def main() -> int:
         backup.mkdir()
 
         print(f"Cloning {REPOSITORY_URL} ...", flush=True)
-        subprocess.run(
+        clone_result = subprocess.run(
             ["git", "clone", REPOSITORY_URL, str(checkout)],
-            check=True,
+            check=False,
         )
+        if clone_result.returncode != 0:
+            raise RuntimeError(
+                "Git could not clone the Ruffle repository "
+                f"(exit code {clone_result.returncode}). See Git's error "
+                "message above. The working tree has not been replaced because "
+                "cloning happens before any existing files are moved. If this "
+                "is a DNS, network, proxy, or access-policy error, restore "
+                "connectivity and rerun this same initializer; do not try an "
+                "alternate cloning method."
+            )
 
         if not (checkout / ".git").exists():
             raise RuntimeError("The clone does not contain Git metadata.")
